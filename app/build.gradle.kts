@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.withfirebase"
+    namespace = "abcdatoz.code.withfirebase"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.withfirebase"
+        applicationId = "abcdatoz.code.withfirebase"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
