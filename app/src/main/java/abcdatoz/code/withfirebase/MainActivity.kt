@@ -1,5 +1,8 @@
 package abcdatoz.code.withfirebase
 
+import abcdatoz.code.withfirebase.ui.navigation.Navigation
+import abcdatoz.code.withfirebase.ui.screens.HomeScreen
+import abcdatoz.code.withfirebase.ui.screens.auth.LoginScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,36 +14,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import abcdatoz.code.withfirebase.ui.theme.WithFirebaseTheme
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var analytics:FirebaseAnalytics
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        analytics = Firebase.analytics
+
         setContent {
+
             WithFirebaseTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Greeting("Androidxxx")
-                }
+                Navigation(analytics,this )
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    WithFirebaseTheme {
-        Greeting("Android")
     }
 }

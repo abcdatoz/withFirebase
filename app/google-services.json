@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "462508082774",
+    "project_id": "android-firebase-c69bb",
+    "storage_bucket": "android-firebase-c69bb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:462508082774:android:0c2ba6237d1c66e4efddf7",
+        "android_client_info": {
+          "package_name": "abcdatoz.code.withfirebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCU_gRYPdjhTNCX8gNtP2a1cqJIW89-V0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
