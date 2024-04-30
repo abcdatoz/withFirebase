@@ -1,9 +1,13 @@
 package abcdatoz.code.withfirebase.ui.screens
 
 import abcdatoz.code.withfirebase.R
+import abcdatoz.code.withfirebase.ui.navigation.Routes
+import abcdatoz.code.withfirebase.ui.navigation.trackScreen
 import abcdatoz.code.withfirebase.ui.screens.db.ContactsScreen
 import abcdatoz.code.withfirebase.ui.screens.db.NotesScreen
 import abcdatoz.code.withfirebase.ui.screens.storage.CloudStorageScreen
+import abcdatoz.code.withfirebase.utils.AnalyticsManager
+import abcdatoz.code.withfirebase.utils.AuthManager
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -11,9 +15,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
@@ -43,9 +49,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -54,16 +64,33 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.google.firebase.analytics.FirebaseAnalytics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(analytics: FirebaseAnalytics, modifier: Modifier = Modifier) {
+fun HomeScreen(
+    analytics: AnalyticsManager,
+    auth: AuthManager,
+    navigation: NavController,
+    modifier: Modifier = Modifier
+) {
     val navController = rememberNavController()
     var showDialog by remember { mutableStateOf(false) }
 
+    val user = auth.getCurrentUser()
+
     val onLogoutConfirmed: () -> Unit = {
-        //do something
+
+        auth.signOut()
+        navigation.navigate(Routes.Login.route) {
+            popUpTo(Routes.Home.route) {
+                inclusive = true
+            }
+        }
     }
+    analytics.logScreenView(screenName = Routes.Home.route)
 
     Scaffold(
         topBar = {
@@ -73,14 +100,55 @@ fun HomeScreen(analytics: FirebaseAnalytics, modifier: Modifier = Modifier) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    Image(
-                        painter = painterResource(id = R.drawable.profile),
-                        contentDescription = "nothing",
-                        modifier = modifier
-                            .padding(end = 8.dp)
-                            .size(40.dp)
-                            .clip(CircleShape)
-                    )
+
+                    if (user?.photoUrl != null) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(user?.photoUrl)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Imagen",
+                            placeholder = painterResource(id = R.drawable.profile),
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .size(40.dp))
+
+
+                    } else {
+
+                        Image(
+                            painter = painterResource(id = R.drawable.profile),
+                            contentDescription = "nothing",
+                            modifier = modifier
+                                .padding(end = 8.dp)
+                                .size(40.dp)
+                                .clip(CircleShape)
+                        )
+
+                    }
+
+
+                    Spacer(modifier.width(10.dp))
+
+                    Column {
+
+                        Text(
+                            text = if (!user?.displayName.isNullOrEmpty()) "Hola ${user?.displayName}" else "Bienvenido",
+                            fontSize = 20.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Text(
+                            text = if (!user?.email.isNullOrEmpty()) " ${user?.email}" else "Anonimo",
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                    }
+
 
                 }
             },
@@ -93,7 +161,9 @@ fun HomeScreen(analytics: FirebaseAnalytics, modifier: Modifier = Modifier) {
                         Icon(Icons.Default.Warning, contentDescription = "Forza Rey")
                     }
 
-                    IconButton(onClick = { showDialog = true }) {
+                    IconButton(onClick = {
+                        showDialog = true
+                    }) {
                         Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar session")
                     }
                 }
@@ -104,15 +174,12 @@ fun HomeScreen(analytics: FirebaseAnalytics, modifier: Modifier = Modifier) {
         }
     ) { contentPadding ->
         Box(modifier.padding(contentPadding)) {
-            if (showDialog) {
-                LogoutDialog(
-                    onConfirmLogout = {
-                        onLogoutConfirmed()
-                        showDialog = false
-                    },
 
-                    onDismiss = { showDialog = false }
-                )
+            if (showDialog) {
+                LogoutDialog(onConfirmLogout = {
+                    onLogoutConfirmed()
+                    showDialog = false
+                }, onDismiss = { showDialog = false })
             }
 
             BottomNavGraph(navController = navController)
@@ -126,26 +193,31 @@ fun HomeScreen(analytics: FirebaseAnalytics, modifier: Modifier = Modifier) {
 @Composable
 @Preview(showBackground = true)
 fun HomeScreenPreview() {
- //   HomeScreen()
+    val context = LocalContext.current
+    val analytics = AnalyticsManager(context)
+    val auth = AuthManager(context)
+    val navController = rememberNavController()
+    HomeScreen(analytics, auth, navController)
 }
 
 
 @Composable
-fun LogoutDialog(
-    onConfirmLogout: () -> Unit,
-    onDismiss: () -> Unit
-) {
+fun LogoutDialog(onConfirmLogout: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Cerrar Session") },
-        text = { Text("are u sure?") },
+        title = { Text("Cerrar sesión") },
+        text = { Text("¿Estás seguro que deseas cerrar sesión?") },
         confirmButton = {
-            Button(onClick = { onConfirmLogout }) {
+            Button(
+                onClick = onConfirmLogout
+            ) {
                 Text("Aceptar")
             }
         },
         dismissButton = {
-            Button(onClick = { onDismiss }) {
+            Button(
+                onClick = onDismiss
+            ) {
                 Text("Cancelar")
             }
         }
@@ -154,7 +226,7 @@ fun LogoutDialog(
 
 
 @Composable
-fun BottomBar(navController: NavHostController){
+fun BottomBar(navController: NavHostController) {
 
     val screens = listOf(
         BottomNavScreen.Contact,
@@ -167,7 +239,7 @@ fun BottomBar(navController: NavHostController){
 
     NavigationBar {
         screens.forEach { screen ->
-            if (currentDestination != null){
+            if (currentDestination != null) {
                 AddItem(
                     screens = screen,
                     currentDestination = currentDestination,
@@ -179,15 +251,19 @@ fun BottomBar(navController: NavHostController){
 }
 
 @Composable
-fun RowScope.AddItem(screens: BottomNavScreen, currentDestination: NavDestination, navController: NavHostController){
+fun RowScope.AddItem(
+    screens: BottomNavScreen,
+    currentDestination: NavDestination,
+    navController: NavHostController
+) {
     NavigationBarItem(
-        label = { Text(text = screens.title)},
-        icon = {Icon(imageVector = screens.icon, contentDescription = "Icons")},
-        selected = currentDestination.hierarchy?.any{
-                                                    it.route == screens.route
+        label = { Text(text = screens.title) },
+        icon = { Icon(imageVector = screens.icon, contentDescription = "Icons") },
+        selected = currentDestination.hierarchy?.any {
+            it.route == screens.route
         } == true,
         onClick = {
-            navController.navigate(screens.route){
+            navController.navigate(screens.route) {
                 popUpTo(navController.graph.id)
                 launchSingleTop = true
             }
@@ -196,27 +272,29 @@ fun RowScope.AddItem(screens: BottomNavScreen, currentDestination: NavDestinatio
 }
 
 @Composable
-fun BottomNavGraph(navController: NavHostController){
+fun BottomNavGraph(navController: NavHostController) {
 
-    NavHost(navController =  navController, startDestination = BottomNavScreen.Contact.route ){
-        composable(route = BottomNavScreen.Contact.route){
+    NavHost(navController = navController, startDestination = BottomNavScreen.Contact.route) {
+        composable(route = BottomNavScreen.Contact.route) {
             ContactsScreen()
         }
 
-        composable(route = BottomNavScreen.Note.route){
+        composable(route = BottomNavScreen.Note.route) {
             NotesScreen()
         }
 
-        composable(route = BottomNavScreen.Photos.route){
+        composable(route = BottomNavScreen.Photos.route) {
             CloudStorageScreen()
         }
     }
 }
 
 
-sealed class BottomNavScreen(val route: String, val title: String, val icon: ImageVector){
-    object Contact: BottomNavScreen(route ="contact", title ="contactos", icon = Icons.Default.Person)
-    object Note: BottomNavScreen(route ="notes", title ="notas", icon = Icons.Default.List)
-    object Photos: BottomNavScreen(route ="photos", title ="photos", icon = Icons.Default.Face)
+sealed class BottomNavScreen(val route: String, val title: String, val icon: ImageVector) {
+    object Contact :
+        BottomNavScreen(route = "contact", title = "contactos", icon = Icons.Default.Person)
+
+    object Note : BottomNavScreen(route = "notes", title = "notas", icon = Icons.Default.List)
+    object Photos : BottomNavScreen(route = "photos", title = "photos", icon = Icons.Default.Face)
 
 }

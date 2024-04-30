@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
         setContent {
 
             WithFirebaseTheme {
-                Navigation(analytics,this )
+                Navigation(this)
             }
         }
     }
