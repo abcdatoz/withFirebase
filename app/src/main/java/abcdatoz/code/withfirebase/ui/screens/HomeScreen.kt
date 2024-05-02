@@ -8,6 +8,7 @@ import abcdatoz.code.withfirebase.ui.screens.db.NotesScreen
 import abcdatoz.code.withfirebase.ui.screens.storage.CloudStorageScreen
 import abcdatoz.code.withfirebase.utils.AnalyticsManager
 import abcdatoz.code.withfirebase.utils.AuthManager
+import abcdatoz.code.withfirebase.utils.RealtimeManager
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -80,6 +81,8 @@ fun HomeScreen(
     var showDialog by remember { mutableStateOf(false) }
 
     val user = auth.getCurrentUser()
+
+    val context = LocalContext.current
 
     val onLogoutConfirmed: () -> Unit = {
 
@@ -182,7 +185,7 @@ fun HomeScreen(
                 }, onDismiss = { showDialog = false })
             }
 
-            BottomNavGraph(navController = navController)
+            BottomNavGraph(navController = navController, context = context, auth =auth)
 
         }
     }
@@ -272,11 +275,12 @@ fun RowScope.AddItem(
 }
 
 @Composable
-fun BottomNavGraph(navController: NavHostController) {
+fun BottomNavGraph(navController: NavHostController, context: Context, auth: AuthManager) {
+    val realtime = RealtimeManager(context )
 
     NavHost(navController = navController, startDestination = BottomNavScreen.Contact.route) {
         composable(route = BottomNavScreen.Contact.route) {
-            ContactsScreen()
+            ContactsScreen(realtime = realtime, auth)
         }
 
         composable(route = BottomNavScreen.Note.route) {
