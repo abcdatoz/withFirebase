@@ -8,6 +8,7 @@ import abcdatoz.code.withfirebase.ui.screens.db.NotesScreen
 import abcdatoz.code.withfirebase.ui.screens.storage.CloudStorageScreen
 import abcdatoz.code.withfirebase.utils.AnalyticsManager
 import abcdatoz.code.withfirebase.utils.AuthManager
+import abcdatoz.code.withfirebase.utils.FirestoreManager
 import abcdatoz.code.withfirebase.utils.RealtimeManager
 import android.content.Context
 import androidx.compose.foundation.Image
@@ -277,6 +278,7 @@ fun RowScope.AddItem(
 @Composable
 fun BottomNavGraph(navController: NavHostController, context: Context, auth: AuthManager) {
     val realtime = RealtimeManager(context )
+    val firestore = FirestoreManager(context)
 
     NavHost(navController = navController, startDestination = BottomNavScreen.Contact.route) {
         composable(route = BottomNavScreen.Contact.route) {
@@ -284,7 +286,7 @@ fun BottomNavGraph(navController: NavHostController, context: Context, auth: Aut
         }
 
         composable(route = BottomNavScreen.Note.route) {
-            NotesScreen()
+            NotesScreen(firestore = firestore )
         }
 
         composable(route = BottomNavScreen.Photos.route) {
