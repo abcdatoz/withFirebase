@@ -59,6 +59,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -215,8 +216,25 @@ fun LoginScreen(
             color = Color(0xFFF1F1F1)
         )
 
-        //  Spacer(modifier.height(25.dp))
-        //ClickableText(text = AnnotatedString("Forzar Cierre Crashlytics"), onClick = {})
+         Spacer(modifier.height(25.dp))
+        ClickableText(
+            text = AnnotatedString("Forzar Cierre Crashlytics"),
+            onClick = {
+
+                val crashlytics = FirebaseCrashlytics.getInstance()
+
+                crashlytics.setCustomKey("clave a", "valor a")
+
+
+                      throw RuntimeException("ERror forzado desde LoginScreen")
+            },
+            style = TextStyle(
+                fontSize = 14.sp,
+                fontFamily = FontFamily.Default,
+                textDecoration = TextDecoration.Underline,
+                color = Purple40
+            )
+            )
 
     }
 
