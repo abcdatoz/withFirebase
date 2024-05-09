@@ -86,7 +86,7 @@ class AuthManager(private val context: Context) {
 
     private val googleSignInClient: GoogleSignInClient by lazy {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestIdToken(context.getString(R.string.default_notification_channel_id))
             .requestEmail()
             .build()
         GoogleSignIn.getClient(context, gso)
